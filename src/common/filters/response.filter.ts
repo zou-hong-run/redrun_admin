@@ -15,7 +15,7 @@ export class ResponseFilter implements ExceptionFilter {
     const statusCode = exception.getStatus();
 
     const res = exception.getResponse() as { message: string[] };
-    console.log('responsefilter', exception);
+    console.log('responsefilter', exception.message, '===', res);
 
     let message = res?.message?.join
       ? res?.message?.join(',')

@@ -5,21 +5,17 @@ export const getConfiguration = () =>
     rootRoleId: parseInt(process.env.ROOT_ROLE_ID || '1'),
     // nodemailer config
     mailer: {
-      host: 'xxx',
-      port: 80,
+      host: process.env.MAILER_HOST,
+      port: process.env.MAILER_PORT,
       auth: {
-        user: 'xxx',
-        pass: 'xxx',
+        user: process.env.MAILER_USER,
+        pass: process.env.MAILER_PASS,
       },
-      secure: false, // or true using 443
-    },
-    // amap config
-    amap: {
-      key: 'xxx',
+      secure: true, // or true using 443
     },
     // jwt sign secret
     jwt: {
-      secret: process.env.JWT_SECRET || '123456',
+      secret: process.env.JWT_SECRET || 'redrun',
     },
     // typeorm config
     database: {
