@@ -17,6 +17,7 @@ import { Dept } from '../dept/entities/dept.entity';
 import { Post } from '../post/entities/post.entity';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { EmailService } from 'src/email/email.service';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -95,7 +96,58 @@ export class UserService {
       return '密码修改失败';
     }
   }
+  async updateUserInfo(user_id: number, param: UpdateUserDto) {
+    const captcha = await this.redisService.get(
+      `update_user_captcha_${user_id}`,
+    );
+    if (!captcha) {
+      throw new HttpException('验证码已经失效了', HttpStatus.BAD_REQUEST);
+    }
+    if (param.captcha !== captcha) {
+      throw new HttpException('验证码不正确', HttpStatus.BAD_REQUEST);
+    }
+    const user = await this.userRepository.findOne({
+      where: {
+        id: user_id,
+      },
+    });
+    if (param.nick_name) {
+      user.nick_name = param.nick_name;
+    }
+    if (param.avatar) {
+      user.avatar = param.avatar;
+    }
+    if (param.email) {
+      user.email = param.email;
+    }
+    try {
+      await this.userRepository.save(user);
+      return '修改用户信息成功';
+    } catch (error) {
+      return '修改用户信息失败';
+    }
+  }
 
+  async getUpdateUserCaptcha(user_id: number) {
+    const user = await this.findUserById(user_id);
+    let email = user.email;
+    const code = Math.random().toString(36).slice(2, 8);
+    try {
+      await this.redisService.set(
+        `update_user_captcha_${user_id}`,
+        code,
+        10 * 60,
+      );
+      await this.emailService.sendMail({
+        to: email,
+        subject: '更改用户信息验证码',
+        html: `<p>你的更改用户信息验证码是 ${code}</p>`,
+      });
+      return '发送验证码成功';
+    } catch (error) {
+      return '发送验证码失败';
+    }
+  }
   async getUpdatePasswordCaptcha(user_id: number) {
     const user = await this.findUserById(user_id);
     let email = user.email;

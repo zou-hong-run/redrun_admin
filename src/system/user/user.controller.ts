@@ -5,6 +5,7 @@ import { Request } from 'express';
 import { UserInfoVo } from './vo/user-info.vo';
 import { PermissionOK } from 'src/common/decorators/permission.decorator';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('user')
 export class UserController {
@@ -26,6 +27,11 @@ export class UserController {
     return '初始化成功';
   }
 
+  /**
+   * 获取用户信息
+   * @param req
+   * @returns
+   */
   @PermissionOK()
   @Get('info')
   async getUserInfo(@Req() req: Request) {
@@ -63,16 +69,44 @@ export class UserController {
     return vo;
   }
 
+  /**
+   * 更改用户密码
+   * @param req
+   * @param param
+   * @returns
+   */
   @Patch('/update_password')
   async updatePassword(@Req() req: Request, @Body() param: UpdatePasswordDto) {
     let user_id = req.user.user_id;
     return await this.userService.updatePassword(user_id, param);
   }
 
+  @Patch('/update_info')
+  async updateInfo(@Req() req: Request, @Body() param: UpdateUserDto) {
+    let user_id = req.user.user_id;
+    return await this.userService.updateUserInfo(user_id, param);
+  }
+
+  /**
+   * 获取更改密码验证码
+   * @param req
+   * @returns
+   */
   @PermissionOK()
   @Get('/update_password_captcha')
   async updatePasswordCaptcha(@Req() req: Request) {
     let user_id = req.user.user_id;
     return await this.userService.getUpdatePasswordCaptcha(user_id);
+  }
+  /**
+   * 获取更改用户信息验证码
+   * @param req
+   * @returns
+   */
+  @PermissionOK()
+  @Get('/update_user_captcha')
+  async updateUserCaptcha(@Req() req: Request) {
+    let user_id = req.user.user_id;
+    return await this.userService.getUpdateUserCaptcha(user_id);
   }
 }
