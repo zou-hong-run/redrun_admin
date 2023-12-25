@@ -8,7 +8,7 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RedisService } from 'src/redis/redis.service';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { md5 } from 'src/utils/common';
 import { Role } from '../role/entities/role.entity';
@@ -262,5 +262,43 @@ export class UserService {
       },
     });
     return user;
+  }
+  async findUserByPage(
+    pageNo: number,
+    pageSize: number,
+    email: string,
+    userName: string,
+    nickName: string,
+  ) {
+    const skipCount = (pageNo - 1) * pageSize;
+    const condition: Record<string, any> = {};
+    if (userName) {
+      condition.user_name = Like(`%${userName}%`);
+    }
+    if (nickName) {
+      condition.nick_name = Like(`%${nickName}%`);
+    }
+    if (email) {
+      condition.email = Like(`%${email}%`);
+    }
+
+    const [users, totalCount] = await this.userRepository.findAndCount({
+      select: [
+        'id',
+        'user_name',
+        'nick_name',
+        'email',
+        'phone_number',
+        'avatar',
+        'create_time',
+      ],
+      skip: skipCount,
+      take: pageSize,
+      where: condition,
+    });
+    return {
+      users,
+      totalCount,
+    };
   }
 }

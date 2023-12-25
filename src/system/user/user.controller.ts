@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Req, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Req,
+  Patch,
+  Query,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Request } from 'express';
@@ -6,7 +16,10 @@ import { UserInfoVo } from './vo/user-info.vo';
 import { PermissionOK } from 'src/common/decorators/permission.decorator';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { generateParseIntPipe } from 'src/common/pipes/my-parseint.pipe';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('用户管理模块')
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -28,7 +41,7 @@ export class UserController {
   }
 
   /**
-   * 获取用户信息
+   * 获取单个用户信息
    * @param req
    * @returns
    */
@@ -69,6 +82,31 @@ export class UserController {
     return vo;
   }
 
+  @Get('list')
+  async getUserInfoList(
+    @Query('pageNo', generateParseIntPipe('pageNo'))
+    pageNo: number,
+    @Query('pageSize', generateParseIntPipe('pageSize'))
+    pageSize: number,
+    @Query('userName')
+    username: string,
+    @Query('nickName')
+    nickName: string,
+    @Query('email')
+    email: string,
+  ) {
+    if (pageNo <= 0) {
+      throw new HttpException('pageNo不能小于1！！！', HttpStatus.BAD_REQUEST);
+    }
+    return await this.userService.findUserByPage(
+      pageNo,
+      pageSize,
+      email,
+      username,
+      nickName,
+    );
+  }
+
   /**
    * 更改用户密码
    * @param req
@@ -81,6 +119,12 @@ export class UserController {
     return await this.userService.updatePassword(user_id, param);
   }
 
+  /**
+   * 更改用户信息
+   * @param req
+   * @param param
+   * @returns
+   */
   @Patch('/update_info')
   async updateInfo(@Req() req: Request, @Body() param: UpdateUserDto) {
     let user_id = req.user.user_id;
