@@ -40,7 +40,9 @@ export class UserService {
   private emailService: EmailService;
 
   async create(param: CreateUserDto) {
-    const captcha = await this.redisService.get(`captcha_${param.email}`);
+    const captcha = await this.redisService.get(
+      `create_user_captcha_${param.email}`,
+    );
     if (!captcha) {
       throw new HttpException('验证码已经失效了！', HttpStatus.BAD_REQUEST);
     }
@@ -128,6 +130,26 @@ export class UserService {
     }
   }
 
+  async getCreateUserCaptcha(user_id: number) {
+    const user = await this.findUserById(user_id);
+    let email = user.email;
+    const code = Math.random().toString(36).slice(2, 8);
+    try {
+      await this.redisService.set(
+        `create_user_captcha_${email}`,
+        code,
+        10 * 60,
+      );
+      await this.emailService.sendMail({
+        to: email,
+        subject: '创建新用户信息验证码',
+        html: `<p>你的创建新用户信息验证码是 ${code}</p>`,
+      });
+      return '发送验证码成功';
+    } catch (error) {
+      return '发送验证码失败';
+    }
+  }
   async getUpdateUserCaptcha(user_id: number) {
     const user = await this.findUserById(user_id);
     let email = user.email;

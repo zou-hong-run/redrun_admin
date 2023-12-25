@@ -1,48 +1,51 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Query,
-  HttpException,
-  HttpStatus,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, HttpStatus } from '@nestjs/common';
 import { LoginService } from './login.service';
-import { EmailService } from 'src/email/email.service';
-import { RedisService } from 'src/redis/redis.service';
 import { LoginParmDto } from './dto/login.dto';
 import { AuthorizeOK } from 'src/common/decorators/authorize.decorator';
+import {
+  ApiBody,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
+@ApiTags('登录模块')
 @Controller()
 export class LoginController {
-  constructor(
-    private readonly loginService: LoginService,
-    private readonly emailService: EmailService,
-    private readonly redisService: RedisService,
-  ) {}
+  constructor(private readonly loginService: LoginService) {}
 
-  /**
-   * 获取验证码
-   * @param address
-   * @returns
-   */
+  @ApiOperation({
+    summary: '用户登录获取验证码',
+  })
+  @ApiQuery({
+    name: 'username',
+    type: String,
+    description: '用户名',
+    required: true,
+    example: 'xxxxx',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: String,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: '用户不存在',
+    type: String,
+  })
   @AuthorizeOK()
   @Get('/captcha')
-  async captcha(@Query('address') address: string) {
-    const code = Math.random().toString(36).slice(2, 8);
-    await this.redisService.set(`captcha_${address}`, code, 5 * 60); // 五分钟过期
-    try {
-      await this.emailService.sendMail({
-        to: address,
-        subject: '注册验证码',
-        html: `<h1>你好！</h1><hr><p>你的注册验证码是${code}</p>`,
-      });
-      return '发送成功';
-    } catch (error) {
-      throw new HttpException(`验证码发送失败${error}`, HttpStatus.BAD_REQUEST);
-    }
+  async captcha(@Query('username') username: string) {
+    await this.loginService.getLoginCaptcha(username);
   }
 
+  @ApiOperation({
+    summary: '用户登录',
+  })
+  @ApiBody({
+    type: LoginParmDto,
+  })
   @AuthorizeOK()
   @Post('/login')
   async login(@Body() param: LoginParmDto) {
@@ -53,6 +56,14 @@ export class LoginController {
     };
   }
 
+  @ApiOperation({
+    summary: '刷新用户token获取新token',
+  })
+  @ApiQuery({
+    name: 'refresh_token',
+    description: '用于刷新的token',
+    required: true,
+  })
   @AuthorizeOK()
   @Get('/refresh')
   async refresh(@Query('refresh_token') refresh_token: string) {

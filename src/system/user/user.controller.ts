@@ -17,34 +17,55 @@ import { PermissionOK } from 'src/common/decorators/permission.decorator';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { generateParseIntPipe } from 'src/common/pipes/my-parseint.pipe';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @ApiTags('用户管理模块')
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  /**
-   * 创建新用户
-   * @param createUserDto
-   * @returns
-   */
+  @ApiOperation({
+    summary: '创建新用户',
+  })
+  @ApiBody({
+    type: CreateUserDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: String,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: '创建用户失败',
+    type: String,
+  })
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
   }
 
+  @ApiOperation({
+    summary: '初始化用户数据',
+  })
   @Get('/init-data')
   async initData() {
     await this.userService.initData();
     return '初始化成功';
   }
 
-  /**
-   * 获取单个用户信息
-   * @param req
-   * @returns
-   */
+  @ApiOperation({
+    summary: '获取单个用户信息',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: UserInfoVo,
+  })
   @PermissionOK()
   @Get('info')
   async getUserInfo(@Req() req: Request) {
@@ -82,6 +103,29 @@ export class UserController {
     return vo;
   }
 
+  @ApiOperation({
+    summary: '根据条件获取用户列表',
+  })
+  @ApiQuery({
+    name: 'pageNo',
+    description: '第几页',
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    description: '每页多少条数据',
+  })
+  @ApiQuery({
+    name: 'userName',
+    description: '用户名模糊查询',
+  })
+  @ApiQuery({
+    name: 'nickName',
+    description: '昵称模糊查询',
+  })
+  @ApiQuery({
+    name: 'email',
+    description: '邮箱模糊查询',
+  })
   @Get('list')
   async getUserInfoList(
     @Query('pageNo', generateParseIntPipe('pageNo'))
@@ -107,46 +151,53 @@ export class UserController {
     );
   }
 
-  /**
-   * 更改用户密码
-   * @param req
-   * @param param
-   * @returns
-   */
+  @ApiOperation({
+    summary: '更改用户密码',
+  })
+  @ApiBody({
+    type: UpdatePasswordDto,
+  })
   @Patch('/update_password')
   async updatePassword(@Req() req: Request, @Body() param: UpdatePasswordDto) {
     let user_id = req.user.user_id;
     return await this.userService.updatePassword(user_id, param);
   }
 
-  /**
-   * 更改用户信息
-   * @param req
-   * @param param
-   * @returns
-   */
+  @ApiOperation({
+    summary: '更改用户信息',
+  })
+  @ApiBody({
+    type: UpdateUserDto,
+  })
   @Patch('/update_info')
   async updateInfo(@Req() req: Request, @Body() param: UpdateUserDto) {
     let user_id = req.user.user_id;
     return await this.userService.updateUserInfo(user_id, param);
   }
 
-  /**
-   * 获取更改密码验证码
-   * @param req
-   * @returns
-   */
+  @ApiOperation({
+    summary: '获取创建新用户验证码',
+  })
+  @PermissionOK()
+  @Get('/create_captcha')
+  async createUserCaptcha(@Req() req: Request) {
+    let user_id = req.user.user_id;
+    return await this.userService.getCreateUserCaptcha(user_id);
+  }
+
+  @ApiOperation({
+    summary: '获取更改密码验证码',
+  })
   @PermissionOK()
   @Get('/update_password_captcha')
   async updatePasswordCaptcha(@Req() req: Request) {
     let user_id = req.user.user_id;
     return await this.userService.getUpdatePasswordCaptcha(user_id);
   }
-  /**
-   * 获取更改用户信息验证码
-   * @param req
-   * @returns
-   */
+
+  @ApiOperation({
+    summary: '获取更改用户信息验证码',
+  })
   @PermissionOK()
   @Get('/update_user_captcha')
   async updateUserCaptcha(@Req() req: Request) {
