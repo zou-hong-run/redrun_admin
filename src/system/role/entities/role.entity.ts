@@ -1,3 +1,4 @@
+import { Dept } from 'src/system/dept/entities/dept.entity';
 import { Menu } from 'src/system/menu/entities/menu.entity';
 import {
   Column,
@@ -24,6 +25,12 @@ export class Role {
   })
   role_name: string;
 
+  @Column({
+    length: 20,
+    comment: '角色权限字符串',
+  })
+  role_key: string;
+
   @CreateDateColumn()
   create_time: Date;
 
@@ -36,6 +43,13 @@ export class Role {
     length: 50,
   })
   remark: string;
+
+  // 用户部门
+  @ManyToMany(() => Dept)
+  @JoinTable({
+    name: 'role_dept',
+  })
+  dept: Dept[];
 
   @ManyToMany(() => Menu)
   @JoinTable({

@@ -16,6 +16,8 @@ export const getConfiguration = () =>
     // jwt sign secret
     jwt: {
       secret: process.env.JWT_SECRET || 'redrun',
+      access_token: process.env.JWT_ACCESS_TOKEN_EXPIRES_TIME || '30m',
+      refresh_token: process.env.JWT_REFRESH_TOKEN_EXPIRES_TIME || '7d',
     },
     // typeorm config
     database: {

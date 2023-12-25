@@ -1,4 +1,3 @@
-import { Dept } from 'src/system/dept/entities/dept.entity';
 import { Post } from 'src/system/post/entities/post.entity';
 import { Role } from 'src/system/role/entities/role.entity';
 import {
@@ -29,7 +28,7 @@ export class User {
   @Column({
     length: 50,
     // 查询隐藏
-    select: false,
+    // select: false,
     comment: '密码',
   })
   password: string;
@@ -45,6 +44,13 @@ export class User {
     comment: '邮箱',
   })
   email: string;
+
+  @Column({
+    nullable: true,
+    length: 50,
+    comment: '电话号码',
+  })
+  phone_number: string;
 
   @Column({
     nullable: true,
@@ -93,13 +99,6 @@ export class User {
     name: 'user_role',
   })
   role: Role[];
-
-  // 用户部门
-  @ManyToMany(() => Dept)
-  @JoinTable({
-    name: 'user_dept',
-  })
-  dept: Dept[];
 
   // 用户职位
   @ManyToMany(() => Post)

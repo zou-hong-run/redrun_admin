@@ -1,7 +1,7 @@
-import { Module, ValidationPipe } from '@nestjs/common';
+import { Global, Module, ValidationPipe } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ResponseFilter } from './common/filters/response.filter';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import {
@@ -18,6 +18,8 @@ import { PostModule } from './system/post/post.module';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { RedisModule } from './redis/redis.module';
 import { EmailModule } from './email/email.module';
+import { JwtModule } from '@nestjs/jwt';
+import { AuthGuard } from './common/guards/auth.guard';
 
 @Module({
   imports: [
@@ -45,6 +47,18 @@ import { EmailModule } from './email/email.module';
       },
       inject: [ConfigService],
     }),
+    JwtModule.registerAsync({
+      global: true,
+      useFactory(configService: ConfigService<ConfigurationKeyPaths>) {
+        return {
+          secret: configService.get<string>('jwt.secret'),
+          signOptions: {
+            expiresIn: configService.get<string>('jwt.access_token'),
+          },
+        };
+      },
+      inject: [ConfigService],
+    }),
     LoginModule,
     UserModule,
     DeptModule,
@@ -57,7 +71,6 @@ import { EmailModule } from './email/email.module';
   controllers: [AppController],
   providers: [
     AppService,
-
     // 全局过滤器
     {
       provide: APP_FILTER,
@@ -67,6 +80,11 @@ import { EmailModule } from './email/email.module';
     {
       provide: APP_INTERCEPTOR,
       useClass: ResponseInterceptor,
+    },
+    // 全局守卫
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
     },
     // 全局管道
     {

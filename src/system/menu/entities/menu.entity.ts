@@ -23,6 +23,26 @@ export class Menu {
 
   @Column({
     length: 20,
+    comment: '路径',
+  })
+  path: string;
+
+  @Column({
+    nullable: true,
+    length: 20,
+    comment: '组件路径',
+  })
+  component: string;
+
+  @Column({
+    nullable: true,
+    length: 20,
+    comment: '权限标识',
+  })
+  perms: string;
+
+  @Column({
+    length: 20,
     comment: '父id',
   })
   parent_id: string;

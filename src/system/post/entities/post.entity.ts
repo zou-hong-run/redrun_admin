@@ -11,15 +11,21 @@ import {
 })
 export class Post {
   @PrimaryGeneratedColumn({
-    comment: '职位id',
+    comment: '岗位id',
   })
   id: number;
 
   @Column({
     length: 20,
-    comment: '职位名称',
+    comment: '岗位名称',
   })
   post_name: string;
+
+  @Column({
+    length: 20,
+    comment: '岗位编码',
+  })
+  post_code: string;
 
   @CreateDateColumn()
   create_time: Date;

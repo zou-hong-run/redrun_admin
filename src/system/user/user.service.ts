@@ -6,12 +6,15 @@ import {
   Logger,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from './entities/user.entity';
 import { RedisService } from 'src/redis/redis.service';
 import { Repository } from 'typeorm';
+import { User } from './entities/user.entity';
 import { md5 } from 'src/utils/common';
+import { Role } from '../role/entities/role.entity';
+import { Menu } from '../menu/entities/menu.entity';
+import { Dept } from '../dept/entities/dept.entity';
+import { Post } from '../post/entities/post.entity';
 
 @Injectable()
 export class UserService {
@@ -19,6 +22,14 @@ export class UserService {
 
   @InjectRepository(User)
   private userRepository: Repository<User>;
+  @InjectRepository(Role)
+  private roleRepository: Repository<Role>;
+  @InjectRepository(Menu)
+  private menuRepository: Repository<Menu>;
+  @InjectRepository(Dept)
+  private deptRepository: Repository<Dept>;
+  @InjectRepository(Post)
+  private postRepository: Repository<Post>;
 
   @Inject(RedisService)
   private redisService: RedisService;
@@ -57,19 +68,99 @@ export class UserService {
     }
   }
 
-  findAll() {
-    return `This action returns all user`;
+  // 初始化用户
+  async initData() {
+    // 用户
+    const user1 = new User();
+    user1.user_name = 'zhangsan';
+    user1.password = md5('123456');
+    user1.email = 'zhr19853149156@163.com';
+    user1.nick_name = '张三';
+    user1.phone_number = '123456789';
+
+    const user2 = new User();
+    user2.user_name = 'lisi';
+    user2.password = md5('123456');
+    user2.email = 'zhr19853149156@163.com';
+    user2.nick_name = '李四';
+    user2.phone_number = '123456789';
+
+    // 岗位
+    let post1 = new Post();
+    post1.post_name = '董事长';
+    post1.post_code = 'ceo';
+
+    let post2 = new Post();
+    post2.post_name = '普通员工';
+    post2.post_code = 'user';
+
+    // 角色
+    let role1 = new Role();
+    role1.role_name = '超级管理员';
+    role1.role_key = 'admin';
+    let role2 = new Role();
+    role2.role_name = '普通角色';
+    role2.role_key = 'common';
+
+    // 部门
+    let dept1 = new Dept();
+    dept1.dept_name = '山东分公司';
+    dept1.parent_id = '1';
+    let dept2 = new Dept();
+    dept2.dept_name = '四川分公司';
+    dept2.parent_id = '1';
+
+    // 菜单
+    let menu1 = new Menu();
+    menu1.menu_name = '用户管理';
+    menu1.parent_id = '1';
+    let menu2 = new Menu();
+    menu2.menu_name = '角色管理';
+    menu2.parent_id = '1';
+    let menu3 = new Menu();
+    menu3.menu_name = '菜单管理';
+    menu3.parent_id = '1';
+    let menu4 = new Menu();
+    menu4.menu_name = '部门管理';
+    menu4.parent_id = '1';
+    let menu5 = new Menu();
+    menu5.menu_name = '岗位管理';
+    menu5.parent_id = '1';
+
+    user1.role = [role1];
+    user2.role = [role1];
+    user1.post = [post1];
+    user2.post = [post2];
+
+    role1.dept = [dept1];
+    role2.dept = [dept2];
+    role1.menu = [menu1, menu2, menu3, menu4, menu5];
+    role2.menu = [menu1];
+
+    await this.menuRepository.save([menu1, menu2, menu3, menu4, menu5]);
+    await this.deptRepository.save([dept1, dept2]);
+    await this.postRepository.save([post1, post2]);
+
+    await this.roleRepository.save([role1, role2]);
+
+    await this.userRepository.save([user1, user2]);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findUserById(user_id: number) {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: user_id,
+      },
+      relations: ['role', 'post', 'role.menu', 'role.dept'],
+    });
+    return user;
   }
-
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async findUserByName(user_name: string) {
+    const user = await this.userRepository.findOne({
+      where: {
+        user_name,
+      },
+    });
+    return user;
   }
 }

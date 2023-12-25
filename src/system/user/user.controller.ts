@@ -1,34 +1,64 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Req } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { Request } from 'express';
+import { UserInfoVo } from './vo/user-info.vo';
+import { PermissionOK } from 'src/common/decorators/permission.decorator';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  /**
+   * 创建新用户
+   * @param createUserDto
+   * @returns
+   */
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
   }
 
-  @Get()
-  findAll() {}
+  @Get('/init-data')
+  async initData() {
+    await this.userService.initData();
+    return '初始化成功';
+  }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {}
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {}
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {}
+  @PermissionOK()
+  @Get('info')
+  async getUserInfo(@Req() req: Request) {
+    let { user_id } = req.user;
+    let user = await this.userService.findUserById(user_id);
+    let vo = new UserInfoVo();
+    vo.id = user.id;
+    vo.nick_name = user.nick_name;
+    vo.user_name = user.user_name;
+    vo.email = user.email;
+    vo.phone_number = user.phone_number;
+    vo.avatar = user.avatar;
+    vo.create_time = user.create_time;
+    // 角色 菜单 部门 岗位
+    // vo.roles = user.role.map((item) => item.role_name);
+    // vo.perms = user.role.reduce((arr, item) => {
+    //   item.menu.forEach((menu) => {
+    //     // 去重
+    //     if (arr.indexOf(menu.perms) === -1) {
+    //       arr.push(menu.perms);
+    //     }
+    //   });
+    //   return arr;
+    // }, []);
+    vo.depts = user.role.reduce((arr, item) => {
+      item.dept.forEach((dept) => {
+        // 去重
+        if (arr.indexOf(dept) === -1) {
+          arr.push(dept);
+        }
+      });
+      return arr;
+    }, []);
+    vo.posts = user.post.map((item) => item.post_name);
+    return vo;
+  }
 }
