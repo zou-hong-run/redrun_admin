@@ -53,6 +53,11 @@ export class AuthGuard implements CanActivate {
     } catch (error) {
       throw new UnauthorizedException('token失效，请重新登录');
     }
+    let user = await this.userService.findUserById(request.user.user_id);
+
+    if (user.role.find((item) => item.role_key === 'admin')) {
+      return true;
+    }
 
     // 使用该注解，表示不需要权限，直接放行
     const permission_ok = this.reflector.getAllAndOverride<boolean>(
@@ -63,7 +68,6 @@ export class AuthGuard implements CanActivate {
       return true;
     }
 
-    let user = await this.userService.findUserById(request.user.user_id);
     const perms = user.role.reduce((arr, item) => {
       let menu = item.menu;
       menu.forEach((item) => {
