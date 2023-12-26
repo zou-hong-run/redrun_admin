@@ -1,34 +1,66 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Query,
+  Delete,
+} from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('岗位管理')
 @Controller('post')
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
-  @Post()
-  create(@Body() createPostDto: CreatePostDto) {
-    return this.postService.create(createPostDto);
+  @ApiOperation({
+    summary: '添加岗位',
+  })
+  @ApiBody({
+    type: CreatePostDto,
+  })
+  @Post('create')
+  async create(@Body() createPostDto: CreatePostDto) {
+    return await this.postService.create(createPostDto);
   }
 
-  @Get()
-  findAll() {
-    return this.postService.findAll();
+  @ApiOperation({
+    summary: '获取所有岗位信息',
+  })
+  @Get('list')
+  async findAll() {
+    return await this.postService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.postService.findOne(+id);
+  @ApiOperation({
+    summary: '获取单个岗位信息',
+  })
+  @ApiQuery({
+    name: 'id',
+    description: '查询岗位的id',
+  })
+  @Get('info')
+  async findOne(@Query('id') id: string) {
+    return await this.postService.findOne(+id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto) {
-    return this.postService.update(+id, updatePostDto);
+  @ApiOperation({
+    summary: '更新岗位信息',
+  })
+  @ApiBody({
+    type: UpdatePostDto,
+  })
+  @Patch('update')
+  async update(@Body() updatePostDto: UpdatePostDto) {
+    return await this.postService.update(updatePostDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.postService.remove(+id);
+  @Delete('delete')
+  async remove(@Query('id') id: string) {
+    return await this.postService.remove(+id);
   }
 }

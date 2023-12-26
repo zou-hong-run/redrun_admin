@@ -1,34 +1,68 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Query,
+  Delete,
+  Req,
+} from '@nestjs/common';
 import { MenuService } from './menu.service';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
+import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Request } from 'express';
 
+@ApiTags('菜单管理')
 @Controller('menu')
 export class MenuController {
   constructor(private readonly menuService: MenuService) {}
 
-  @Post()
+  @ApiOperation({
+    summary: '创建菜单',
+  })
+  @ApiBody({
+    type: CreateMenuDto,
+  })
+  @Post('create')
   create(@Body() createMenuDto: CreateMenuDto) {
     return this.menuService.create(createMenuDto);
   }
 
-  @Get()
-  findAll() {
-    return this.menuService.findAll();
+  @ApiOperation({
+    summary: '获取菜单列表',
+  })
+  @Get('list')
+  async findAll(@Req() req: Request) {
+    let user_id = req.user.user_id;
+    return await this.menuService.getMenus(user_id);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.menuService.findOne(+id);
+  @ApiOperation({
+    summary: '获取单个菜单信息',
+  })
+  @Get('info')
+  info(@Query('id') id: string) {
+    return this.menuService.info(+id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMenuDto: UpdateMenuDto) {
-    return this.menuService.update(+id, updateMenuDto);
+  @ApiOperation({
+    summary: '更新菜单信息',
+  })
+  @ApiBody({
+    type: UpdateMenuDto,
+  })
+  @Patch('update')
+  update(@Body() updateMenuDto: UpdateMenuDto) {
+    return this.menuService.update(updateMenuDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
+  @ApiOperation({
+    summary: '删除菜单信息',
+  })
+  @Delete('delete')
+  async remove(@Query('id') id: string) {
     return this.menuService.remove(+id);
   }
 }

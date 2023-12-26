@@ -43,12 +43,11 @@ export class Menu {
   })
   perms: string;
 
-  // @Column({
-  //   length: 20,
-  //   comment: '父id',
-  // })
-  @TreeParent()
-  parent: Menu;
+  @Column({
+    nullable: true,
+    comment: '父级id',
+  })
+  parent_id: number;
 
   @CreateDateColumn()
   create_time: Date;

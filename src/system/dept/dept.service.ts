@@ -52,7 +52,7 @@ export class DeptService {
     return depts;
   }
 
-  async findOne(id: number) {
+  async info(id: number) {
     const dept = await this.deptRepository.findOne({
       where: { id },
     });

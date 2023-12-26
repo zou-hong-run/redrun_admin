@@ -44,9 +44,9 @@ export class DeptController {
     name: 'id',
     description: '部门id',
   })
-  @Get('findOne')
-  async findOne(@Query('id') id: string) {
-    return await this.deptService.findOne(+id);
+  @Get('info')
+  async info(@Query('id') id: string) {
+    return await this.deptService.info(+id);
   }
 
   @ApiOperation({

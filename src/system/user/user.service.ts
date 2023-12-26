@@ -241,41 +241,41 @@ export class UserService {
     // 菜单
     let menu = new Menu();
     menu.menu_name = '系统管理';
-    menu.parent = null;
+    menu.parent_id = null;
     menu.path = 'system';
     menu.perms = '';
 
     let menu1 = new Menu();
     menu1.menu_name = '用户管理';
-    menu1.parent = menu;
+    menu1.parent_id = menu.id;
     menu1.path = 'user';
     menu1.component = 'sytem/user/index';
     menu1.perms = 'system:user:list';
 
     let menu2 = new Menu();
     menu2.menu_name = '角色管理';
-    menu2.parent = menu;
+    menu2.parent_id = menu.id;
     menu2.path = 'role';
     menu2.component = 'system/role/index';
     menu2.perms = 'system:role:list';
 
     let menu3 = new Menu();
     menu3.menu_name = '菜单管理';
-    menu3.parent = menu;
+    menu3.parent_id = menu.id;
     menu3.path = 'menu';
     menu3.component = 'system/menu/index';
     menu3.perms = 'system:menu:list';
 
     let menu4 = new Menu();
     menu4.menu_name = '部门管理';
-    menu4.parent = menu;
+    menu4.parent_id = menu.id;
     menu4.path = 'dept';
     menu4.component = 'system/dept/index';
     menu4.perms = 'system:dept:list';
 
     let menu5 = new Menu();
     menu5.menu_name = '岗位管理';
-    menu5.parent = menu;
+    menu5.parent_id = menu.id;
     menu5.path = 'post';
     menu5.component = 'system/post/index';
     menu5.perms = 'system:post:list';

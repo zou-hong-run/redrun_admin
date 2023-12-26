@@ -1,26 +1,68 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Post } from './entities/post.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class PostService {
-  create(createPostDto: CreatePostDto) {
-    return 'This action adds a new post';
+  @InjectRepository(Post)
+  private postRepository: Repository<Post>;
+
+  async create(createPostDto: CreatePostDto) {
+    let post = new Post();
+    post.post_code = createPostDto.post_code;
+    post.post_name = createPostDto.post_name;
+    try {
+      await this.postRepository.save(post);
+    } catch (error) {
+      throw new HttpException('创建失败', HttpStatus.BAD_REQUEST);
+    }
+    return '创建成功';
   }
 
-  findAll() {
-    return `This action returns all post`;
+  async findAll() {
+    try {
+      return await this.postRepository.findAndCount();
+    } catch (error) {
+      throw new HttpException('查询失败', HttpStatus.BAD_REQUEST);
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} post`;
+  async findOne(id: number) {
+    try {
+      return await this.postRepository.findOne({ where: { id: id } });
+    } catch (error) {
+      throw new HttpException('查询失败', HttpStatus.BAD_REQUEST);
+    }
   }
 
-  update(id: number, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`;
+  async update(updatePostDto: UpdatePostDto) {
+    let post = await this.postRepository.findOne({
+      where: { id: updatePostDto.id },
+    });
+    if (!post) {
+      throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
+    }
+    try {
+      post.post_code = updatePostDto.post_code;
+      post.post_name = updatePostDto.post_name;
+      await this.postRepository.save(post);
+    } catch (error) {
+      throw new HttpException('更新失败', HttpStatus.BAD_REQUEST);
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} post`;
+  async remove(id: number) {
+    let post = await this.postRepository.findOne({ where: { id } });
+    if (!post) {
+      throw new HttpException('删除用户不存在', HttpStatus.BAD_REQUEST);
+    }
+    try {
+      await this.postRepository.remove(post);
+    } catch (error) {
+      throw new HttpException('删除失败', HttpStatus.BAD_REQUEST);
+    }
   }
 }
