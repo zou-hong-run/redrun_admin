@@ -18,14 +18,17 @@ import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { generateParseIntPipe } from 'src/common/pipes/my-parseint.pipe';
 import {
+  ApiBearerAuth,
   ApiBody,
   ApiOperation,
   ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { AuthorizeOK } from 'src/common/decorators/authorize.decorator';
 
 @ApiTags('用户管理模块')
+@ApiBearerAuth()
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -45,7 +48,7 @@ export class UserController {
     description: '创建用户失败',
     type: String,
   })
-  @Post()
+  @Post('/create')
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
   }
@@ -53,6 +56,7 @@ export class UserController {
   @ApiOperation({
     summary: '初始化用户数据',
   })
+  @AuthorizeOK()
   @Get('/init-data')
   async initData() {
     await this.userService.initData();

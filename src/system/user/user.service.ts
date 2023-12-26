@@ -220,51 +220,82 @@ export class UserService {
     let role1 = new Role();
     role1.role_name = '超级管理员';
     role1.role_key = 'admin';
+
     let role2 = new Role();
     role2.role_name = '普通角色';
     role2.role_key = 'common';
 
     // 部门
+    let dept = new Dept();
+    dept.id = 1;
+    dept.dept_name = '总部门';
+    dept.parent_id = null;
+
     let dept1 = new Dept();
     dept1.dept_name = '山东分公司';
-    dept1.parent_id = '1';
+    dept1.parent_id = dept.id;
     let dept2 = new Dept();
     dept2.dept_name = '四川分公司';
-    dept2.parent_id = '1';
+    dept2.parent_id = dept.id;
 
     // 菜单
+    let menu = new Menu();
+    menu.menu_name = '系统管理';
+    menu.parent = null;
+    menu.path = 'system';
+    menu.perms = '';
+
     let menu1 = new Menu();
     menu1.menu_name = '用户管理';
-    menu1.parent_id = '1';
+    menu1.parent = menu;
+    menu1.path = 'user';
+    menu1.component = 'sytem/user/index';
+    menu1.perms = 'system:user:list';
+
     let menu2 = new Menu();
     menu2.menu_name = '角色管理';
-    menu2.parent_id = '1';
+    menu2.parent = menu;
+    menu2.path = 'role';
+    menu2.component = 'system/role/index';
+    menu2.perms = 'system:role:list';
+
     let menu3 = new Menu();
     menu3.menu_name = '菜单管理';
-    menu3.parent_id = '1';
+    menu3.parent = menu;
+    menu3.path = 'menu';
+    menu3.component = 'system/menu/index';
+    menu3.perms = 'system:menu:list';
+
     let menu4 = new Menu();
     menu4.menu_name = '部门管理';
-    menu4.parent_id = '1';
+    menu4.parent = menu;
+    menu4.path = 'dept';
+    menu4.component = 'system/dept/index';
+    menu4.perms = 'system:dept:list';
+
     let menu5 = new Menu();
     menu5.menu_name = '岗位管理';
-    menu5.parent_id = '1';
-
-    user1.role = [role1];
-    user2.role = [role1];
-    user1.post = [post1];
-    user2.post = [post2];
+    menu5.parent = menu;
+    menu5.path = 'post';
+    menu5.component = 'system/post/index';
+    menu5.perms = 'system:post:list';
 
     role1.dept = [dept1];
     role2.dept = [dept2];
     role1.menu = [menu1, menu2, menu3, menu4, menu5];
     role2.menu = [menu1];
 
-    await this.menuRepository.save([menu1, menu2, menu3, menu4, menu5]);
-    await this.deptRepository.save([dept1, dept2]);
+    user1.role = [role1];
+    user2.role = [role2];
+
+    user1.post = [post1];
+    user2.post = [post2];
+
+    await this.menuRepository.save([menu, menu1, menu2, menu3, menu4, menu5]);
+    await this.deptRepository.save([dept, dept1, dept2]);
+
     await this.postRepository.save([post1, post2]);
-
     await this.roleRepository.save([role1, role2]);
-
     await this.userRepository.save([user1, user2]);
   }
 

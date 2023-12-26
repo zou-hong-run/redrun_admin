@@ -3,6 +3,8 @@ import {
   CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
+  Tree,
+  TreeParent,
   UpdateDateColumn,
 } from 'typeorm';
 
@@ -22,10 +24,10 @@ export class Dept {
   dept_name: string;
 
   @Column({
-    length: 20,
+    nullable: true,
     comment: '上级部门id',
   })
-  parent_id: string;
+  parent_id: number;
 
   @CreateDateColumn()
   create_time: Date;

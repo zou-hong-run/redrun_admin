@@ -3,6 +3,7 @@ import {
   CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
+  TreeParent,
   UpdateDateColumn,
 } from 'typeorm';
 
@@ -24,6 +25,7 @@ export class Menu {
   @Column({
     length: 20,
     comment: '路径',
+    default: '',
   })
   path: string;
 
@@ -41,11 +43,12 @@ export class Menu {
   })
   perms: string;
 
-  @Column({
-    length: 20,
-    comment: '父id',
-  })
-  parent_id: string;
+  // @Column({
+  //   length: 20,
+  //   comment: '父id',
+  // })
+  @TreeParent()
+  parent: Menu;
 
   @CreateDateColumn()
   create_time: Date;

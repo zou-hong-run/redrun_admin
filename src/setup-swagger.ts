@@ -16,12 +16,16 @@ const setupSwagger = (app: INestApplication) => {
     .setTitle(configService.get<string>('swagger.title'))
     .setDescription(configService.get<string>('swagger.desc'))
     .setLicense('MIT', 'https://github.com/zou_hong_run/redrun-admin')
-    .addSecurity('redrun-admin', {
-      description: '后台管理接口授权',
-      type: 'apiKey',
-      in: 'header',
-      name: 'Authorization',
+    .addBearerAuth({
+      type: 'http',
+      description: '基于jwt的认证',
     })
+    // .addSecurity('redrun-admin', {
+    //   description: '后台管理接口授权',
+    //   type: 'apiKey',
+    //   in: 'header',
+    //   name: 'Authorization',
+    // })
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup(

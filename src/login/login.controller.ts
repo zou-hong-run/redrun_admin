@@ -3,6 +3,7 @@ import { LoginService } from './login.service';
 import { LoginParmDto } from './dto/login.dto';
 import { AuthorizeOK } from 'src/common/decorators/authorize.decorator';
 import {
+  ApiBearerAuth,
   ApiBody,
   ApiOperation,
   ApiQuery,
@@ -11,6 +12,7 @@ import {
 } from '@nestjs/swagger';
 
 @ApiTags('登录模块')
+@ApiBearerAuth()
 @Controller()
 export class LoginController {
   constructor(private readonly loginService: LoginService) {}
