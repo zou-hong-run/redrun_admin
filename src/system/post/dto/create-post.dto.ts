@@ -9,4 +9,7 @@ export class CreatePostDto {
   @ApiProperty()
   @IsNotEmpty()
   post_code: string;
+
+  @ApiProperty()
+  remark: string;
 }

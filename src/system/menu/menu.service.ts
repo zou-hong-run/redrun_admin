@@ -15,29 +15,15 @@ export class MenuService {
 
   async create(createMenuDto: CreateMenuDto) {
     let menu = new Menu();
-    menu.menu_name = createMenuDto.menu_name;
-    menu.path = createMenuDto.path;
-    menu.perms = createMenuDto.perms;
-    menu.parent_id = createMenuDto.parent_id;
+    Object.assign(menu, createMenuDto);
     try {
       await this.menuRepository.save(menu);
     } catch (error) {}
     return '创建菜单成功';
   }
 
-  async getMenus(user_id: number) {
-    let user = await this.userRepository.findOne({
-      where: { id: user_id },
-      relations: ['role.menu'],
-    });
-    let menus = [];
-    if (user) {
-      user.role.forEach((role) => {
-        role.menu.forEach((menu) => {
-          menus.push(menu);
-        });
-      });
-    }
+  async getMenus() {
+    const menus = await this.menuRepository.find();
     return menus;
   }
 
@@ -62,6 +48,7 @@ export class MenuService {
         menu.path = updateMenuDto.path;
         menu.perms = updateMenuDto.perms;
         menu.component = updateMenuDto.component;
+        menu.menu_type = updateMenuDto.menu_type;
 
         await this.menuRepository.save(menu);
       } catch (error) {

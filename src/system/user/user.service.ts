@@ -5,7 +5,7 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
+import { RegisterUserDto } from './dto/register-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RedisService } from 'src/redis/redis.service';
 import { Like, Repository } from 'typeorm';
@@ -18,6 +18,7 @@ import { Post } from '../post/entities/post.entity';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { EmailService } from 'src/email/email.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 
 @Injectable()
 export class UserService {
@@ -40,8 +41,65 @@ export class UserService {
   private emailService: EmailService;
 
   async create(param: CreateUserDto) {
+    const findUser = await this.userRepository.findOneBy({
+      user_name: param.user_name,
+    });
+
+    if (findUser) {
+      throw new HttpException('用户已经存在了', HttpStatus.BAD_REQUEST);
+    }
+
+    const newUser = new User();
+    let deptIds = param.dept_ids;
+    let roleIds = param.role_ids;
+    let postIds = param.post_ids;
+
+    let depts: Dept[] = [];
+    let roles: Role[] = [];
+    let posts: Post[] = [];
+
+    try {
+      for (const id of deptIds) {
+        let dept = await this.deptRepository.findOne({ where: { id } });
+        if (!dept) {
+          throw new HttpException('部门不存在', HttpStatus.BAD_REQUEST);
+        }
+        depts.push(dept);
+      }
+      for (const id of roleIds) {
+        let role = await this.roleRepository.findOne({
+          where: { id },
+          relations: ['dept'],
+        });
+        if (!role) {
+          throw new HttpException('角色不存在', HttpStatus.BAD_REQUEST);
+        }
+        role.dept = Array.from(new Set(role.dept.concat(depts)));
+        await this.roleRepository.save(role);
+        roles.push(role);
+      }
+      for (const id of postIds) {
+        let post = await this.postRepository.findOne({ where: { id } });
+        if (!post) {
+          throw new HttpException('岗位不存在', HttpStatus.BAD_REQUEST);
+        }
+        posts.push(post);
+      }
+      Object.assign<User, CreateUserDto>(newUser, {
+        password: md5(param.password),
+        ...param,
+      });
+      newUser.role = roles;
+      newUser.post = posts;
+      await this.userRepository.save(newUser);
+      return '添加用户成功';
+    } catch (error) {
+      throw new HttpException(`添加用户失败：${error}`, HttpStatus.BAD_REQUEST);
+    }
+  }
+  async register(param: RegisterUserDto) {
     const captcha = await this.redisService.get(
-      `create_user_captcha_${param.email}`,
+      `register_user_captcha_${param.email}`,
     );
     if (!captcha) {
       throw new HttpException('验证码已经失效了！', HttpStatus.BAD_REQUEST);
@@ -58,19 +116,15 @@ export class UserService {
     }
 
     const newUser = new User();
-    Object.assign<User, CreateUserDto>(newUser, {
-      user_name: param.user_name,
+    Object.assign<User, RegisterUserDto>(newUser, {
       password: md5(param.password),
-      email: param.email,
-      nick_name: param.nick_name,
-      captcha: param.captcha,
+      ...param,
     });
 
     try {
       await this.userRepository.save(newUser);
       return '注册成功';
     } catch (error) {
-      this.logger.error(error, UserService);
       throw new HttpException(`注册失败：${error}`, HttpStatus.BAD_REQUEST);
     }
   }
@@ -130,20 +184,20 @@ export class UserService {
     }
   }
 
-  async getCreateUserCaptcha(user_id: number) {
+  async getRegisterUserCaptcha(user_id: number) {
     const user = await this.findUserById(user_id);
     let email = user.email;
     const code = Math.random().toString(36).slice(2, 8);
     try {
       await this.redisService.set(
-        `create_user_captcha_${email}`,
+        `register_user_captcha_${email}`,
         code,
         10 * 60,
       );
       await this.emailService.sendMail({
         to: email,
-        subject: '创建新用户信息验证码',
-        html: `<p>你的创建新用户信息验证码是 ${code}</p>`,
+        subject: '注册新用户信息验证码',
+        html: `<p>你的注册新用户信息验证码是 ${code}</p>`,
       });
       return '发送验证码成功';
     } catch (error) {
@@ -280,10 +334,10 @@ export class UserService {
     menu5.component = 'system/post/index';
     menu5.perms = 'system:post:list';
 
-    role1.dept = [dept1];
-    role2.dept = [dept2];
-    role1.menu = [menu1, menu2, menu3, menu4, menu5];
-    role2.menu = [menu1];
+    role1.dept = [dept, dept1];
+    role2.dept = [dept, dept2];
+    role1.menu = [menu, menu1, menu2, menu3, menu4, menu5];
+    role2.menu = [menu, menu1];
 
     user1.role = [role1];
     user2.role = [role2];
@@ -296,6 +350,7 @@ export class UserService {
 
     await this.postRepository.save([post1, post2]);
     await this.roleRepository.save([role1, role2]);
+
     await this.userRepository.save([user1, user2]);
   }
 
@@ -313,23 +368,25 @@ export class UserService {
       where: {
         user_name,
       },
+      relations: ['role', 'post', 'role.menu', 'role.dept'],
     });
     return user;
   }
   async findUserByPage(
-    pageNo: number,
-    pageSize: number,
+    page_no: number,
+    page_size: number,
     email: string,
-    userName: string,
-    nickName: string,
+    user_name: string,
+    nick_name: string,
+    dept_id: number,
   ) {
-    const skipCount = (pageNo - 1) * pageSize;
+    const skipCount = (page_no - 1) * page_size;
     const condition: Record<string, any> = {};
-    if (userName) {
-      condition.user_name = Like(`%${userName}%`);
+    if (user_name) {
+      condition.user_name = Like(`%${user_name}%`);
     }
-    if (nickName) {
-      condition.nick_name = Like(`%${nickName}%`);
+    if (nick_name) {
+      condition.nick_name = Like(`%${nick_name}%`);
     }
     if (email) {
       condition.email = Like(`%${email}%`);
@@ -345,8 +402,9 @@ export class UserService {
         'avatar',
         'create_time',
       ],
+      relations: ['role', 'post', 'role.dept'],
       skip: skipCount,
-      take: pageSize,
+      take: page_size,
       where: condition,
     });
     return {

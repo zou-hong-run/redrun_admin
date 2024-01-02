@@ -3,6 +3,7 @@ import {
   Catch,
   ExceptionFilter,
   HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { ResponseDto } from '../class/res.class';
@@ -23,6 +24,6 @@ export class ResponseFilter implements ExceptionFilter {
 
     let result = new ResponseDto(statusCode, message);
 
-    response.status(statusCode).json(result);
+    response.status(HttpStatus.OK).json(result);
   }
 }

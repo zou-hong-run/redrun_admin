@@ -31,10 +31,8 @@ export class DeptController {
     summary: '获取部门列表',
   })
   @Get('list')
-  async findAll(@Req() req: Request) {
-    let user_id = req.user.user_id;
-
-    return await this.deptService.findAll(user_id);
+  async findAll() {
+    return await this.deptService.findAll();
   }
 
   @ApiOperation({

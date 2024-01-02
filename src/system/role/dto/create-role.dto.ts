@@ -11,8 +11,8 @@ export class CreateRoleDto {
   role_key: string;
 
   @ApiProperty()
-  menu: number[];
+  menu_ids: number[];
 
   @ApiProperty()
-  dept: number[];
+  remark: string;
 }

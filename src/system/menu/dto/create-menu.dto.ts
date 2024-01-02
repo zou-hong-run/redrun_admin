@@ -11,6 +11,10 @@ export class CreateMenuDto {
   path: string;
 
   @ApiProperty()
+  @IsNotEmpty()
+  menu_type: string;
+
+  @ApiProperty()
   component: string;
 
   @ApiProperty()

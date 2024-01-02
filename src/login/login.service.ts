@@ -13,6 +13,7 @@ import { ConfigService } from '@nestjs/config';
 import { ConfigurationKeyPaths } from 'src/config/configuration';
 import { RedisService } from 'src/redis/redis.service';
 import { EmailService } from 'src/email/email.service';
+import { GetMenuVo } from './vo/getMenu.vo';
 
 @Injectable()
 export class LoginService {
@@ -110,7 +111,7 @@ export class LoginService {
       throw new HttpException('当前用户不存在', HttpStatus.BAD_REQUEST);
     }
     const code = Math.random().toString(36).slice(2, 8);
-    await this.redisService.set(`login_${username}`, code, 5 * 60); // 五分钟过期
+    await this.redisService.set(`login_captcha_${username}`, code, 5 * 60); // 五分钟过期
     try {
       await this.emailService.sendMail({
         to: user.email,
@@ -121,5 +122,20 @@ export class LoginService {
     } catch (error) {
       throw new HttpException(`验证码发送失败${error}`, HttpStatus.BAD_REQUEST);
     }
+  }
+
+  async getPermissionMenus(user_id: number) {
+    let user = await this.userService.findUserById(user_id);
+    let menuVo = new GetMenuVo();
+    menuVo.menus = user.role.reduce((menuArr, item) => {
+      item.menu.forEach((menu) => {
+        // 去重
+        if (menuArr.indexOf(menu) === -1) {
+          menuArr.push(menu);
+        }
+      });
+      return menuArr;
+    }, []);
+    return menuVo;
   }
 }

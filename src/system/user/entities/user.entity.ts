@@ -100,7 +100,7 @@ export class User {
   })
   role: Role[];
 
-  // 用户职位
+  // 用户岗位
   @ManyToMany(() => Post)
   @JoinTable({
     name: 'user_post',

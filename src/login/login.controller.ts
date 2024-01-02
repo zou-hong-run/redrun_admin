@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Query, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Query,
+  HttpStatus,
+  Req,
+} from '@nestjs/common';
 import { LoginService } from './login.service';
 import { LoginParmDto } from './dto/login.dto';
 import { AuthorizeOK } from 'src/common/decorators/authorize.decorator';
@@ -10,6 +18,8 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { PermissionOK } from 'src/common/decorators/permission.decorator';
+import { Request } from 'express';
 
 @ApiTags('登录模块')
 @ApiBearerAuth()
@@ -74,5 +84,15 @@ export class LoginController {
       access_token: data.access_token,
       refresh_token: data.refresh_token,
     };
+  }
+
+  @ApiOperation({
+    summary: '获取用户权限菜单',
+  })
+  @PermissionOK()
+  @Get('/getPermissionMenus')
+  async getPermissionMenus(@Req() req: Request) {
+    let user_id = req.user.user_id;
+    return await this.loginService.getPermissionMenus(user_id);
   }
 }

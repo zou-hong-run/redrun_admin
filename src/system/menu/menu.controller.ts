@@ -34,9 +34,8 @@ export class MenuController {
     summary: '获取菜单列表',
   })
   @Get('list')
-  async findAll(@Req() req: Request) {
-    let user_id = req.user.user_id;
-    return await this.menuService.getMenus(user_id);
+  async findAll() {
+    return await this.menuService.getMenus();
   }
 
   @ApiOperation({

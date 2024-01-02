@@ -24,7 +24,7 @@ export class PostService {
 
   async findAll() {
     try {
-      return await this.postRepository.findAndCount();
+      return await this.postRepository.find();
     } catch (error) {
       throw new HttpException('查询失败', HttpStatus.BAD_REQUEST);
     }

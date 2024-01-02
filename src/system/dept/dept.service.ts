@@ -21,34 +21,21 @@ export class DeptService {
         id: parent_id,
       },
     });
-    if (parentDept) {
-      let dept = new Dept();
-      Object.assign(dept, {
-        dept_name,
-        parent: parentDept,
-      });
-      try {
-        await this.deptRepository.save(dept);
-        return '添加部门成功';
-      } catch (error) {
-        throw new HttpException(`添加部门失败${error}`, HttpStatus.BAD_REQUEST);
-      }
+    let dept = new Dept();
+    Object.assign(dept, {
+      dept_name,
+      parent: parentDept,
+    });
+    try {
+      await this.deptRepository.save(dept);
+      return '添加部门成功';
+    } catch (error) {
+      throw new HttpException(`添加部门失败${error}`, HttpStatus.BAD_REQUEST);
     }
   }
 
-  async findAll(user_id: number) {
-    let user = await this.userRepository.findOne({
-      where: { id: user_id },
-      relations: ['role.dept'],
-    });
-    let depts = [];
-    if (user) {
-      user.role.forEach((role) => {
-        role.dept.forEach((dept) => {
-          depts.push(dept);
-        });
-      });
-    }
+  async findAll() {
+    let depts = await this.deptRepository.find();
     return depts;
   }
 
