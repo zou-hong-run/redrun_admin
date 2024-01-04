@@ -17,9 +17,21 @@ export class MenuService {
     let menu = new Menu();
     Object.assign(menu, createMenuDto);
     try {
+      let findMenu = await this.menuRepository.findOne({
+        where: {
+          path: menu.path,
+        },
+      });
+      if (findMenu) {
+        throw ':菜单路径已经存在了，请输入其他路径';
+      }
+
       await this.menuRepository.save(menu);
-    } catch (error) {}
-    return '创建菜单成功';
+
+      return '创建菜单成功';
+    } catch (error) {
+      throw new HttpException('创建菜单失败' + error, HttpStatus.BAD_REQUEST);
+    }
   }
 
   async getMenus() {

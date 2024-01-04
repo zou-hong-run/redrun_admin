@@ -38,7 +38,7 @@ export class Menu {
 
   @Column({
     nullable: true,
-    length: 20,
+    length: 40,
     comment: '权限标识',
   })
   perms: string;
